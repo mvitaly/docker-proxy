@@ -9,7 +9,13 @@ type DockerOptions struct {
 }
 
 type Docker struct {
-	client *docker.Client
+	client Lister
+}
+
+type Container struct {
+	ID    string
+	Image string
+	Names []string
 }
 
 type Lister interface {
@@ -24,4 +30,37 @@ func NewDocker(o *DockerOptions) (*Docker, error) {
 	return &Docker{
 		client: client,
 	}, nil
+}
+
+type ContainersFilter struct {
+	ID string
+}
+
+func (d *Docker) Containers(f *ContainersFilter) ([]Container, error) {
+	result := []Container{}
+	if f == nil {
+		f = &ContainersFilter{}
+	}
+	containers, err := d.client.ListContainers(docker.ListContainersOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, container := range containers {
+		if f.ID == "" {
+			result = append(result, Container{
+				ID:    container.ID,
+				Image: container.Image,
+				Names: container.Names,
+			})
+		} else {
+			if container.ID == f.ID {
+				result = append(result, Container{
+					ID:    container.ID,
+					Image: container.Image,
+					Names: container.Names,
+				})
+			}
+		}
+	}
+	return result, nil
 }
