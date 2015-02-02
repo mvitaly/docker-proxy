@@ -11,10 +11,6 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-type Lister interface {
-	ListContainers(opts docker.ListContainersOptions) ([]docker.APIContainers, error)
-}
-
 type proxyOptions struct {
 	docker Lister
 }

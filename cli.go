@@ -1,32 +1,41 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"os"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/codegangsta/cli"
 )
 
-func main() {
-	endpoint := "unix:///var/run/docker.sock"
-	client, _ := docker.NewClient(endpoint)
-	containers, _ := client.ListContainers(docker.ListContainersOptions{})
-	for _, img := range containers {
-		fmt.Println("ID: ", img.ID)
-		fmt.Println("Image: ", img.Image)
-		fmt.Println("Status:", img.Status)
-		fmt.Println("Ports:", img.Ports)
-		for _, port := range img.Ports {
-			fmt.Println("\tPrivate:", port.PrivatePort)
-			fmt.Println("\tPublic:", port.PublicPort)
-			fmt.Println("\tType:", port.Type)
-			fmt.Println("\tIP:", port.IP)
-			fmt.Println("")
-		}
-		fmt.Println("Names:", img.Names)
+func mainAction(c *cli.Context) {
+	docker, err := NewDocker(&DockerOptions{Address: c.String("docker-host")})
+	if err != nil {
+		panic(err)
 	}
 
-	proxy := getProxy(&proxyOptions{docker: client})
+	proxy := getProxy(&proxyOptions{docker: docker.client})
+	http.ListenAndServe(c.String("address"), proxy)
+}
 
-	http.ListenAndServe("localhost:8888", proxy)
+func main() {
+	app := cli.NewApp()
+	app.Name = "docker-proxy"
+	app.Usage = "http proxy to a docker instance"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "docker-host, d",
+			Value:  "unix:///var/run/docker.sock",
+			Usage:  "address for docker socket",
+			EnvVar: "DOCKER_HOST",
+		},
+		cli.StringFlag{
+			Name:   "address, a",
+			Value:  "localhost:8888",
+			Usage:  "address to bind to",
+			EnvVar: "DOCKER_PROXY_ADDRESS",
+		},
+	}
+	app.Action = mainAction
+	app.Run(os.Args)
+
 }
