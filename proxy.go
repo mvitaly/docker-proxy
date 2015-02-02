@@ -11,28 +11,18 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-func main() {
-	endpoint := "unix:///var/run/docker.sock"
-	client, _ := docker.NewClient(endpoint)
-	containers, _ := client.ListContainers(docker.ListContainersOptions{})
-	for _, img := range containers {
-		fmt.Println("ID: ", img.ID)
-		fmt.Println("Image: ", img.Image)
-		fmt.Println("Status:", img.Status)
-		fmt.Println("Ports:", img.Ports)
-		for _, port := range img.Ports {
-			fmt.Println("\tPrivate:", port.PrivatePort)
-			fmt.Println("\tPublic:", port.PublicPort)
-			fmt.Println("\tType:", port.Type)
-			fmt.Println("\tIP:", port.IP)
-			fmt.Println("")
-		}
-		fmt.Println("Names:", img.Names)
-	}
+type Lister interface {
+	ListContainers(opts docker.ListContainersOptions) ([]docker.APIContainers, error)
+}
 
-	proxy := &httputil.ReverseProxy{
+type proxyOptions struct {
+	docker Lister
+}
+
+func getProxy(o *proxyOptions) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			containers, _ := client.ListContainers(docker.ListContainersOptions{})
+			containers, _ := o.docker.ListContainers(docker.ListContainersOptions{})
 			for _, container := range containers {
 				imageParts := strings.Split(container.Image, ":")
 				name := ""
@@ -49,7 +39,9 @@ func main() {
 								continue
 							}
 							req.URL.Scheme = "http"
-							req.URL.Host = fmt.Sprintf("%s:%d", port.IP, port.PublicPort)
+							req.URL.Host = fmt.Sprintf(
+								"%s:%d", port.IP, port.PublicPort,
+							)
 							fmt.Println(req.URL)
 							return
 						}
@@ -58,10 +50,6 @@ func main() {
 			}
 		},
 
-		FlushInterval: 0,
-
 		ErrorLog: log.New(os.Stderr, "", log.Lshortfile),
 	}
-
-	http.ListenAndServe("localhost:8888", proxy)
 }
