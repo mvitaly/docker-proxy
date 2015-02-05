@@ -17,6 +17,7 @@ type proxyOptions struct {
 
 func getProxy(o *proxyOptions) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
+
 		Director: func(req *http.Request) {
 			containers, _ := o.docker.ListContainers(docker.ListContainersOptions{})
 			for _, container := range containers {
@@ -34,11 +35,9 @@ func getProxy(o *proxyOptions) *httputil.ReverseProxy {
 							if port.IP == "" || port.PublicPort == 0 {
 								continue
 							}
+							hostParts := strings.Split(req.Host, ":")
+							req.URL.Host = fmt.Sprintf("%s:%d", hostParts[0], port.PublicPort)
 							req.URL.Scheme = "http"
-							req.URL.Host = fmt.Sprintf(
-								"%s:%d", port.IP, port.PublicPort,
-							)
-							fmt.Println(req.URL)
 							return
 						}
 					}

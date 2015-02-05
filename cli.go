@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -14,7 +15,8 @@ func mainAction(c *cli.Context) {
 	}
 
 	proxy := getProxy(&proxyOptions{docker: docker.client})
-	http.ListenAndServe(c.String("address"), proxy)
+	bind := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+	panic(http.ListenAndServe(bind, proxy))
 }
 
 func main() {
@@ -30,9 +32,15 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:   "address, a",
-			Value:  "localhost:8888",
+			Value:  "0.0.0.0",
 			Usage:  "address to bind to",
 			EnvVar: "DOCKER_PROXY_ADDRESS",
+		},
+		cli.IntFlag{
+			Name:   "port, p",
+			Value:  8080,
+			Usage:  "address to bind to",
+			EnvVar: "DOCKER_PROXY_PORT",
 		},
 	}
 	app.Action = mainAction
