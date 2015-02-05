@@ -1,4 +1,4 @@
-package main
+package docker
 
 import (
 	docker "github.com/fsouza/go-dockerclient"
@@ -9,7 +9,7 @@ type DockerOptions struct {
 }
 
 type Docker struct {
-	client Lister
+	Client Lister
 }
 
 type Container struct {
@@ -28,7 +28,7 @@ func NewDocker(o *DockerOptions) (*Docker, error) {
 		return nil, err
 	}
 	return &Docker{
-		client: client,
+		Client: client,
 	}, nil
 }
 
@@ -41,7 +41,7 @@ func (d *Docker) Containers(f *ContainersFilter) ([]Container, error) {
 	if f == nil {
 		f = &ContainersFilter{}
 	}
-	containers, err := d.client.ListContainers(docker.ListContainersOptions{})
+	containers, err := d.Client.ListContainers(docker.ListContainersOptions{})
 	if err != nil {
 		return nil, err
 	}

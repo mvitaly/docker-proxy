@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"fmt"
@@ -8,18 +8,19 @@ import (
 	"os"
 	"strings"
 
-	docker "github.com/fsouza/go-dockerclient"
+	dockerclient "github.com/fsouza/go-dockerclient"
+	"github.com/xbudex/docker-proxy/docker"
 )
 
-type proxyOptions struct {
-	docker Lister
+type ProxyOptions struct {
+	Docker docker.Lister
 }
 
-func getProxy(o *proxyOptions) *httputil.ReverseProxy {
+func GetProxy(o *ProxyOptions) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 
 		Director: func(req *http.Request) {
-			containers, _ := o.docker.ListContainers(docker.ListContainersOptions{})
+			containers, _ := o.Docker.ListContainers(dockerclient.ListContainersOptions{})
 			for _, container := range containers {
 				imageParts := strings.Split(container.Image, ":")
 				name := ""

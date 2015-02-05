@@ -1,4 +1,4 @@
-package main
+package docker
 
 import (
 	"fmt"
@@ -86,7 +86,7 @@ func containersMatch(t *testing.T, container Container, api docker.APIContainers
 
 func TestDockerGetContainer(t *testing.T) {
 	sampleContainers := []docker.APIContainers{container1, container2}
-	dockerClient := &Docker{client: &mockClient{containers: sampleContainers}}
+	dockerClient := &Docker{Client: &mockClient{containers: sampleContainers}}
 
 	containers, err := dockerClient.Containers(nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func TestDockerGetContainer(t *testing.T) {
 
 func TestDockerGetContainerByName(t *testing.T) {
 	sampleContainers := []docker.APIContainers{container1, container2}
-	dockerClient := &Docker{client: &mockClient{containers: sampleContainers}}
+	dockerClient := &Docker{Client: &mockClient{containers: sampleContainers}}
 
 	containers, err := dockerClient.Containers(&ContainersFilter{
 		ID: "bcdef0123456",

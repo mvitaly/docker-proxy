@@ -6,15 +6,17 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
+	"github.com/xbudex/docker-proxy/docker"
+	"github.com/xbudex/docker-proxy/proxy"
 )
 
 func mainAction(c *cli.Context) {
-	docker, err := NewDocker(&DockerOptions{Address: c.String("docker-host")})
+	client, err := docker.NewDocker(&docker.DockerOptions{Address: c.String("docker-host")})
 	if err != nil {
 		panic(err)
 	}
 
-	proxy := getProxy(&proxyOptions{docker: docker.client})
+	proxy := proxy.GetProxy(&proxy.ProxyOptions{Docker: client.Client})
 	bind := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
 	panic(http.ListenAndServe(bind, proxy))
 }
