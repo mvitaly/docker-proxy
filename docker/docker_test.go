@@ -16,7 +16,7 @@ func (c *mockClient) ListContainers(opts docker.ListContainersOptions) ([]docker
 	return c.containers, c.error
 }
 
-var container1 docker.APIContainers = docker.APIContainers{
+var container1 = docker.APIContainers{
 	ID:     "01234567890a",
 	Image:  "some-image:tag",
 	Status: "Up Time",
@@ -33,7 +33,7 @@ var container1 docker.APIContainers = docker.APIContainers{
 	Names:      []string{"suspicious_yalow", "some-image"},
 }
 
-var container2 docker.APIContainers = docker.APIContainers{
+var container2 = docker.APIContainers{
 	ID:     "bcdef0123456",
 	Image:  "some-image:tag",
 	Status: "Up Time",
@@ -75,7 +75,7 @@ func containersMatch(t *testing.T, container Container, api docker.APIContainers
 	for index := range container.Names {
 		if container.Names[index] != api.Names[index] {
 			return false, fmt.Sprintf(
-				"Has different number of names. Got %d, expected %d.",
+				"Has different number of names. Got %s, expected %s.",
 				container.Names[index],
 				api.Names[index],
 			)
@@ -97,7 +97,7 @@ func TestDockerGetContainer(t *testing.T) {
 		if ok, err := containersMatch(t, container, sampleContainers[index]); !ok {
 			t.Errorf(err)
 		}
-		count += 1
+		count++
 	}
 	if count != len(containers) {
 		t.Errorf("Did not get the right number of containers. Got %d, expected %d.", count, len(containers))

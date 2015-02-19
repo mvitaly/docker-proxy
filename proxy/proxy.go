@@ -12,13 +12,14 @@ import (
 	"github.com/xbudex/docker-proxy/docker"
 )
 
+// Options for making a new proxy
 type Options struct {
 	Docker docker.Lister
 }
 
+// New creates a new ReverseProxy instance
 func New(o *Options) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
-
 		Director: func(req *http.Request) {
 			containers, _ := o.Docker.ListContainers(dockerclient.ListContainersOptions{})
 			for _, container := range containers {

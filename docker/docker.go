@@ -4,24 +4,29 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+// Options for creating a new docker client
 type Options struct {
 	Address string
 }
 
+// Docker client
 type Docker struct {
 	Client Lister
 }
 
+// Container information
 type Container struct {
 	ID    string
 	Image string
 	Names []string
 }
 
+// Lister is an interface of to get APIContainers
 type Lister interface {
 	ListContainers(opts docker.ListContainersOptions) ([]docker.APIContainers, error)
 }
 
+// New creates a new instance of a docker client
 func New(o *Options) (*Docker, error) {
 	client, err := docker.NewClient(o.Address)
 	if err != nil {
@@ -32,10 +37,12 @@ func New(o *Options) (*Docker, error) {
 	}, nil
 }
 
+// ContainersFilter are the options to filter based on containers
 type ContainersFilter struct {
 	ID string
 }
 
+// Containers returns a list of containers based on the filter options
 func (d *Docker) Containers(f *ContainersFilter) ([]Container, error) {
 	result := []Container{}
 	if f == nil {
