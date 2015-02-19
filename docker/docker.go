@@ -4,7 +4,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-type DockerOptions struct {
+type Options struct {
 	Address string
 }
 
@@ -22,7 +22,7 @@ type Lister interface {
 	ListContainers(opts docker.ListContainersOptions) ([]docker.APIContainers, error)
 }
 
-func NewDocker(o *DockerOptions) (*Docker, error) {
+func New(o *Options) (*Docker, error) {
 	client, err := docker.NewClient(o.Address)
 	if err != nil {
 		return nil, err

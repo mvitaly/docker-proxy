@@ -11,12 +11,12 @@ import (
 )
 
 func mainAction(c *cli.Context) {
-	client, err := docker.NewDocker(&docker.DockerOptions{Address: c.String("docker-host")})
+	client, err := docker.New(&docker.Options{Address: c.String("docker-host")})
 	if err != nil {
 		panic(err)
 	}
 
-	proxy := proxy.GetProxy(&proxy.ProxyOptions{Docker: client.Client})
+	proxy := proxy.New(&proxy.Options{Docker: client.Client})
 	bind := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
 	panic(http.ListenAndServe(bind, proxy))
 }
@@ -47,5 +47,4 @@ func main() {
 	}
 	app.Action = mainAction
 	app.Run(os.Args)
-
 }

@@ -12,11 +12,11 @@ import (
 	"github.com/xbudex/docker-proxy/docker"
 )
 
-type ProxyOptions struct {
+type Options struct {
 	Docker docker.Lister
 }
 
-func GetProxy(o *ProxyOptions) *httputil.ReverseProxy {
+func New(o *Options) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 
 		Director: func(req *http.Request) {
@@ -39,10 +39,12 @@ func GetProxy(o *ProxyOptions) *httputil.ReverseProxy {
 							hostParts := strings.Split(req.Host, ":")
 							req.URL.Host = fmt.Sprintf("%s:%d", hostParts[0], port.PublicPort)
 							req.URL.Scheme = "http"
+							fmt.Printf("%s://%s\n", req.URL.Scheme, req.URL.Host)
 							return
 						}
 					}
 				}
+				fmt.Printf("found nothing\n")
 			}
 		},
 
