@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+docker build --tag docker-proxy-godoc $(dirname $0)/..
+docker run \
+  --publish-all \
+  --entrypoint godoc \
+  docker-proxy-godoc -http=":8080"
