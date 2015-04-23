@@ -11,13 +11,21 @@ import (
 )
 
 func mainAction(c *cli.Context) {
-	client, err := docker.New(&docker.Options{Address: c.String("docker-host")})
+    fmt.Printf("Connecting to docker\n")
+	client, err := docker.New(&docker.Options{Address: c.String("docker-host"), CertPath: c.String("docker-cert-path")})
 	if err != nil {
 		panic(err)
 	}
 
-	proxy := proxy.New(&proxy.Options{Docker: client.Client})
+	var targetPort = c.Int("target-port")
+	if targetPort == 0 {
+	    targetPort = c.Int("port")
+	}
+
+	proxy := proxy.New(&proxy.Options{Docker: client.Client, Port: targetPort, DefaultContainer: c.String("default-container-name")})
 	bind := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+
+    fmt.Printf("Start listening to incoming connections on: %s\n", bind)
 	panic(http.ListenAndServe(bind, proxy))
 }
 
@@ -33,6 +41,21 @@ func main() {
 			EnvVar: "DOCKER_HOST",
 		},
 		cli.StringFlag{
+			Name:   "docker-cert-path, c",
+			Value:  "",
+			Usage:  "path to TLS certificates",
+			EnvVar: "DOCKER_CERT_PATH",
+		},
+		cli.StringFlag{
+		    Name:   "default-container-name, n",
+			Usage:  "path to TLS certificates",
+		},
+		cli.IntFlag{
+			Name:   "target-port, t",
+			Value:  0,
+			Usage:  "port to forward requests to, defaults to listen port",
+		},
+		cli.StringFlag{
 			Name:   "address, a",
 			Value:  "0.0.0.0",
 			Usage:  "address to bind to",
@@ -41,7 +64,7 @@ func main() {
 		cli.IntFlag{
 			Name:   "port, p",
 			Value:  8080,
-			Usage:  "address to bind to",
+			Usage:  "port to bind to",
 			EnvVar: "DOCKER_PROXY_PORT",
 		},
 	}

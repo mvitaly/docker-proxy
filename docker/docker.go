@@ -1,17 +1,20 @@
 package docker
 
 import (
+	"fmt"
+
 	docker "github.com/fsouza/go-dockerclient"
 )
 
 // Options for creating a new docker client
 type Options struct {
 	Address string
+	CertPath string
 }
 
 // Docker client
 type Docker struct {
-	Client Lister
+	Client *docker.Client
 }
 
 // Container information
@@ -28,7 +31,16 @@ type Lister interface {
 
 // New creates a new instance of a docker client
 func New(o *Options) (*Docker, error) {
-	client, err := docker.NewClient(o.Address)
+	var client *docker.Client
+	var err error
+	if (o.CertPath == "") {
+		client, err = docker.NewClient(o.Address)
+	} else {
+		ca := fmt.Sprintf("%s/ca.pem", o.CertPath)
+		cert := fmt.Sprintf("%s/cert.pem", o.CertPath)
+		key := fmt.Sprintf("%s/key.pem", o.CertPath)
+		client, err = docker.NewTLSClient(o.Address, cert, key, ca)
+	}
 	if err != nil {
 		return nil, err
 	}
