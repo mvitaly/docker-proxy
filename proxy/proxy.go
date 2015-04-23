@@ -20,23 +20,25 @@ type Options struct {
 
 // GetContainerHost is used to get the proxied host
 func GetContainerHost(container *dockerclient.Container, host string, port string) string {
-    var containerHost string
     for containerPort, containerHostPorts := range container.NetworkSettings.Ports {
         if string(containerPort) == port + "/tcp" {
             if containerHostPorts == nil {
+                // not exposed port, use the container ip
                 ip := container.NetworkSettings.IPAddress
-                containerHost = fmt.Sprintf("%s:%s", ip, port)
-            } else {
-                containerHostPort := containerHostPorts[0]
-                if containerHostPort.HostIP == "0.0.0.0" {
-                    containerHost = fmt.Sprintf("%s:%s", host, containerHostPort.HostPort)
-                } else {
-                    containerHost = fmt.Sprintf("%s:%s", containerHostPort.HostIP, containerHostPort.HostPort)
-                }
+                return fmt.Sprintf("%s:%s", ip, port)
             }
+
+            containerHostPort := containerHostPorts[0]
+            if containerHostPort.HostIP == "0.0.0.0" {
+                // exposed port within the docker isntance
+                return fmt.Sprintf("%s:%s", host, containerHostPort.HostPort)
+            }
+
+            // exposed port within docker swarm cluster
+            return fmt.Sprintf("%s:%s", containerHostPort.HostIP, containerHostPort.HostPort)
         }
     }
-    return containerHost
+    return ""
 }
 
 // New creates a new ReverseProxy instance
@@ -92,14 +94,16 @@ func New(o *Options) *httputil.ReverseProxy {
                 fmt.Printf("Using default container\n")
                 inspectedContainer, _ := o.Docker.InspectContainer(o.DefaultContainer)
 
-                containerHost := GetContainerHost(inspectedContainer, host, port)
+                if inspectedContainer != nil {
+                    containerHost := GetContainerHost(inspectedContainer, host, port)
 
-                if containerHost != "" {
-                    req.URL.Host = containerHost
-                    req.URL.Scheme = "http"
-                    fmt.Printf("Proxy request to %s://%s\n", req.URL.Scheme, req.URL.Host)
+                    if containerHost != "" {
+                        req.URL.Host = containerHost
+                        req.URL.Scheme = "http"
+                        fmt.Printf("Proxy request to %s://%s\n", req.URL.Scheme, req.URL.Host)
 
-                    return
+                        return
+                    }
                 }
             }
 
