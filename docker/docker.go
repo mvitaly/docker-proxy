@@ -8,7 +8,7 @@ import (
 
 // Options for creating a new docker client
 type Options struct {
-	Address string
+	Address  string
 	CertPath string
 }
 
@@ -33,7 +33,7 @@ type Lister interface {
 func New(o *Options) (*Docker, error) {
 	var client *docker.Client
 	var err error
-	if (o.CertPath == "") {
+	if o.CertPath == "" {
 		client, err = docker.NewClient(o.Address)
 	} else {
 		ca := fmt.Sprintf("%s/ca.pem", o.CertPath)
